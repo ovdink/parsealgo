@@ -26,6 +26,11 @@ allFiles = os.listdir(path)
 #             'Группировка для веб-формы опроса',
 #             'КПЭ "Удовлетворенность внутренних клиентов" в проект/программу включен'}
 df_new = pd.DataFrame()
+df_project = pd.DataFrame()
+df_leaders = pd.DataFrame()
+df_preleaders = pd.DataFrame()
+
+
 dict_new = {}
 dict_projects = {}
 dict_leaders = {}
@@ -47,11 +52,11 @@ dict_preleaders = {}
 #for i in range(12,0,-1):
 #    dic[str(i)] = df[cols].shift(i).add_sufix(str(i))
        
-l = 0
-j = 0
-k = 0
 n0 = n1 = n3 = n4 = n5 = n6 = n7 = n8 = 0
-df_sv = pd.DataFrame()
+l0 = l1 = l2 = l3 = l4 = 0
+pl0 = pl1 = pl2 = pl3 = 0
+pr0 = pr1 = pr2 = 0
+
 for file in allFiles:
     if file[-4:] == 'xlsx':
         print('\nНашли xlsx: ' + file + '\n')
@@ -70,48 +75,98 @@ for file in allFiles:
                 flag2 = 0
                 dolCount = 0
                 
-                #newStr = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], index=['Наименование сервиса', 'Описание сервиса', 'Владелец', 'Блок', 'Индекс', 'Подразделение - владелец сервиса', 'Принадлежность к группе', 'Количество пользователей', 'Группировка для веб-формы опроса', 'КПЭ "Удовлетворенность внутренних клиентов" в проект/программу включен'])
                 for index, row in df.iterrows():
-                    #df_new = df_new.a
-                    #df_new.iloc[l, 0] = df_new.append(newStr)
-                    #df_new.append(newStr)
                     if row[0] == 'Наименование сервиса':
                         n0 = row[2]
-                        print(sheet + ' n0 :\n', n0)
                     if row[0] == 'Описание сервиса':
                         n1 = row[2]
-                        print(sheet + ' n1 :\n', n1)
                     if row[0] == 'Владелец:' or row[0] == 'Владелец':
                         n2 = row[2]
-                        print(sheet + ' n2 :\n', n2)
                     if row[0] == 'Блок':
                         n3 = row[2]
-                        print(sheet + ' n3 :\n', n3)
                     if row[0] == 'Индекс':
                         n4 = row[2]
-                        print(sheet + ' n4 :\n', n4)
                     if row[5] == 'Подразделение - владелец сервиса':
                         n5 = row[7]
-                        print(sheet + ' n5 :\n', n5)
                     if row[0] == 'Принадлежность к группе':
                         n6 = row[2]
-                        print(sheet + ' n6 :\n', n6)
                     if row[0] == 'Количество пользователей':
                         n7 = row[2]  
-                        print(sheet + ' n7 :\n', n7)
                     if row[0] == 'Влияние  проекта/программы на сервис:':
                         pr0 = n4
                         pr1 = row[2]
                         pr2 = row[3]
                     if row[0] == 'Группировка для веб-формы опроса':
                         n8 = row[2]
-                        #l += 1
                     if row[0] == 'Должность' and dolCount == 0:
                         flag = 1
                         dolCount += 1
-                    if row[0] == 0 and dolCount > 0:
+                    if row[0] == 'Должность' and dolCount == 1 and flag == 0:
+                        flag2 = 1
+                        dolCount += 1
+                    if row[0] == 0 and dolCount == 1:
                         flag = 0
+                        #flag2 = 0
+                    if row[0] == 0 and len(df_preleaders) != 0 and dolCount == 2:
                         flag2 = 0
+                    if flag == 1 and row[0] != 'Должность' and row[0] != 0:
+                        l0 = row[0]
+                        l1 = row[3]
+                        l3 = n4
+                        l4 = 'ГВК-13'
+                        dict_leaders = [{'Должность' : l0,
+                                         'ФИО' : l1,
+                                         'Вес КПЭ в целях (если применимо)' : l2,
+                                         'Индекс' : l3,
+                                         'ГВК' : l4}]
+                        dToFrame2 = pd.DataFrame.from_dict(dict_leaders)
+                        df_leaders = df_leaders.append(dToFrame2)
+                   
+                    if flag2 == 1 and row[0] != 'Должность' and row[0]!= 0:          
+                        pl0 = row[0]
+                        pl1 = row[3]
+                        pl3 = n4
+                        pl4 = 'ГВК-13'
+                        dict_preleaders = [{'Должность' : pl0,
+                                            'ФИО' : pl1,
+                                            'Вес КПЭ в целях (если применимо)' : pl2,
+                                            'Индекс' : pl3,
+                                            'ГВК' : pl4}]
+                        dToFrame3 = pd.DataFrame.from_dict(dict_preleaders)
+                        df_preleaders = df_preleaders.append(dToFrame3)
+                    #if flag2 == 0 and len(df_preleaders)
+#                    elif flag2 == 1 and row[0] != 'Должность' and row[0] != 0:
+#                        print(1)
+                        
+                df_leaders = df_leaders[df_leaders.ФИО != 0]       
+                dict_project = [{'Индекс' : pr0,
+                                 'ID' : pr1,
+                                 'Название проекта/программы' : pr2}]
+                dToFrame0 = pd.DataFrame.from_dict(dict_project)
+                df_project = df_project.append(dToFrame0)
+    
+                dict_new = [{'Наименование сервиса': n0,
+                             'Описание сервиса': n1,
+                             'Владелец' : n2,
+                             'Блок' : n3,
+                             'Индекс': n4,
+                             'Подразделение - владелец сервиса' : n5,
+                             'Принадлежность к группе' : n6,
+                             'Количество пользователей' : n7,
+                             'Группировка для веб-формы опроса' : n8}]
+                dToFrame1 = pd.DataFrame.from_dict(dict_new)
+                df_new = df_new.append(dToFrame1)
+                
+                
+                  
+                    
+#                dict_leaders = [{'Должность' : l0,
+#                                 'ФИО' : l1,
+#                                 'Вес КПЭ в целях (если применимо)' : l2,
+#                                 'Индекс' : l3,
+#                                 'ГВК' : l4}]
+#                dToFrame2 = pd.DataFrame.from_dict(dict_leaders)
+#                df_leaders = df_leaders.append(dToFrame2)
 #                    if flag == 1 and row[0] != 'Должность' and row[0] != 0 and len(dict_leaders) == 0: #df_leaders.iloc[j, 0] == 0:
 #                        df_leaders.iloc[j, 0] = row[0]
 #                        df_leaders.iloc[j, 1] = row[3]
@@ -129,27 +184,17 @@ for file in allFiles:
 #                        k += 1
 #                        print ('строки preleaders', k)
                 print('Создали файл\n')
-#                gc.collect()
-        dict_new = [{'Наименование сервиса': n0,
-                             'Описание сервиса': n1,
-                             'Владелец' : n2,
-                             'Блок' : n3,
-                             'Индекс': n4,
-                             'Подразделение - владелец сервиса' : n5,
-                             'Принадлежность к группе' : n6,
-                             'Количество пользователей' : n7,
-                             'Группировка для веб-формы опроса' : n8}]
-        print(dict_new)
-            
-        dict_k = pd.DataFrame.from_dict(dict_new)
-        df_sv = df_sv.append(dict_k)
-    
-#        df_leaders.to_sql('_leaders', con = db, if_exists='append')
-#        df_new.to_sql('_general', con = db, if_exists='append')
-#        df_preleaders.to_sql('_preleaders', con = db, if_exists='append')
-#        df_projects.to_sql('_projects', con = db, if_exists='append')
-#        
-#conn.close()
-#db.dispose()
 
+        df_leaders.to_sql('_leaders', con = db, if_exists='append')
+        print('Заполнили таблицу leaders')
+        df_new.to_sql('_general', con = db, if_exists='append')
+        print('Заполнили таблицу general')
+        df_preleaders.to_sql('_preleaders', con = db, if_exists='append')
+        print('Заполнили таблицу preleaders')
+        df_project.to_sql('_projects', con = db, if_exists='append')
+        print('Заполнили таблицу projects')
+        
+conn.close()
+print('Соединение прервано\n')
+db.dispose()
             
